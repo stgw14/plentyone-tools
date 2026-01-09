@@ -56,7 +56,7 @@ clasp login
 cd gas
 
 # Option A: 新規プロジェクト作成
-clasp create --title "plentyONE API Client" --rootDir ./src
+clasp create-script --title "plentyONE API Client" --rootDir ./src
 
 # Option B: 既存プロジェクトをクローン（既にGASプロジェクトがある場合）
 # cp .clasp.json.example .clasp.json
@@ -71,7 +71,7 @@ clasp push
 
 確認:
 ```bash
-clasp open  # ブラウザでGASエディタを開く
+clasp open-script  # ブラウザでGASエディタを開く
 ```
 
 ### 6. 認証情報を設定
@@ -211,7 +211,7 @@ clasp push
 ### GASエディタを開く
 
 ```bash
-clasp open
+clasp open-script
 ```
 
 ## 📝 ライセンス

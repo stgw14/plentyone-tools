@@ -2,15 +2,15 @@
 
 # ドキュメント
 README.md
+README.ja.md
 *.md
 
 # アーカイブ
 *.zip
 
-# 設定ファイル（GASには不要）
+# 設定ファイル
 .clasp.json
 .clasp.json.example
-appsscript.json
 
 # その他
 .gitignore
