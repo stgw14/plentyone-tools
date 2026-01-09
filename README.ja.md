@@ -98,13 +98,13 @@ clasp login
 # GASプロジェクト作成
 cd gas
 cp .clasp.json.example .clasp.json
-clasp create --title "plentyONE API Client" --rootDir ./src
+clasp create-script --title "plentyONE API Client" --rootDir ./src
 
 # コードをpush
 clasp push
 
 # GASエディタを開いて認証情報を設定
-clasp open
+clasp open-script
 ```
 
 ## ⚙️ 環境変数 / 設定

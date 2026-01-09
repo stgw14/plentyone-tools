@@ -97,13 +97,13 @@ clasp login
 # Create GAS project
 cd gas
 cp .clasp.json.example .clasp.json
-clasp create --title "plentyONE API Client" --rootDir ./src
+clasp create-script --title "plentyONE API Client" --rootDir ./src
 
 # Push code to GAS
 clasp push
 
 # Open GAS editor to configure credentials
-clasp open
+clasp open-script
 ```
 
 ## ⚙️ Configuration

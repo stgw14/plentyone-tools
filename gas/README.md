@@ -56,7 +56,7 @@ This opens a browser for Google authentication.
 cd gas
 
 # Option A: Create new project
-clasp create --title "plentyONE API Client" --rootDir ./src
+clasp create-script --title "plentyONE API Client" --rootDir ./src
 
 # Option B: Clone existing project (if you already have one)
 # cp .clasp.json.example .clasp.json
@@ -71,7 +71,7 @@ clasp push
 
 Verify with:
 ```bash
-clasp open  # Opens GAS editor in browser
+clasp open-script  # Opens GAS editor in browser
 ```
 
 ### 6. Configure Credentials
@@ -209,7 +209,7 @@ clasp push
 ### Open GAS Editor
 
 ```bash
-clasp open
+clasp open-script
 ```
 
 ## 📝 License
