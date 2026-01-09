@@ -1,0 +1,2324 @@
+{
+	"info": {
+		"_postman_id": "0228edd1-7d7d-4600-913a-814ff71d1de5",
+		"name": "plentyONE API",
+		"description": "plentyONE REST API - 商品、注文、在庫、認証、カテゴリ、連絡先、支払いのエンドポイント",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27198968"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Save tokens to environment after successful login",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.accessToken) {",
+									"        pm.environment.set('accessToken', response.accessToken);",
+									"        console.log('Access token saved to environment');",
+									"    }",
+									"    if (response.refreshToken) {",
+									"        pm.environment.set('refreshToken', response.refreshToken);",
+									"        console.log('Refresh token saved to environment');",
+									"    }",
+									"    if (response.tokenType) {",
+									"        pm.environment.set('tokenType', response.tokenType);",
+									"    }",
+									"    pm.test('Login successful', function() {",
+									"        pm.expect(response.accessToken).to.not.be.undefined;",
+									"    });",
+									"} else {",
+									"    pm.test('Login failed', function() {",
+									"        pm.expect.fail('Login returned status ' + pm.response.code);",
+									"    });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"login"
+							]
+						},
+						"description": "Authenticates a user and returns access token. Tokens are automatically saved to environment variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Clear tokens from environment after logout",
+									"if (pm.response.code === 200) {",
+									"    pm.environment.set('accessToken', '');",
+									"    pm.environment.set('refreshToken', '');",
+									"    console.log('Tokens cleared from environment');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"logout"
+							]
+						},
+						"description": "Logs out the current user and clears tokens from environment"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// Update tokens in environment after refresh",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.accessToken) {",
+									"        pm.environment.set('accessToken', response.accessToken);",
+									"        console.log('Access token refreshed');",
+									"    }",
+									"    if (response.refreshToken) {",
+									"        pm.environment.set('refreshToken', response.refreshToken);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/login/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"login",
+								"refresh"
+							]
+						},
+						"description": "Refreshes the access token using the refresh token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get authorized user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/authorized_user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"authorized_user"
+							]
+						},
+						"description": "Gets information about the currently authorized user"
+					},
+					"response": []
+				},
+				{
+					"name": "Check password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/check_password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"check_password"
+							]
+						},
+						"description": "Checks if a password is valid"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Items",
+			"item": [
+				{
+					"name": "Search item",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items?with=&lang=&page=&itemsPerPage=&name=&id=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items"
+							],
+							"query": [
+								{
+									"key": "with",
+									"value": "",
+									"description": "Includes variation information"
+								},
+								{
+									"key": "lang",
+									"value": "",
+									"description": "Language"
+								},
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "Filter by name"
+								},
+								{
+									"key": "id",
+									"value": "",
+									"description": "Filter by ID"
+								}
+							]
+						},
+						"description": "Searches for items"
+					},
+					"response": []
+				},
+				{
+					"name": "Create new items",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stockType\": 0,\n  \"manufacturerId\": 1,\n  \"variations\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items"
+							]
+						},
+						"description": "Creates new items"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk update items",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 123,\n  \"flagOne\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items"
+							]
+						},
+						"description": "Updates up to 50 items"
+					},
+					"response": []
+				},
+				{
+					"name": "Get item by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Gets an item by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"flagOne\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Updates an item by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete item",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Deletes an item by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "List variations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:itemId/variations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":itemId",
+								"variations"
+							],
+							"variable": [
+								{
+									"key": "itemId"
+								}
+							]
+						},
+						"description": "Lists all variations of an item"
+					},
+					"response": []
+				},
+				{
+					"name": "Get variation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:itemId/variations/:variationId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":itemId",
+								"variations",
+								":variationId"
+							],
+							"variable": [
+								{
+									"key": "itemId"
+								},
+								{
+									"key": "variationId"
+								}
+							]
+						},
+						"description": "Gets a specific variation"
+					},
+					"response": []
+				},
+				{
+					"name": "Create variation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isMain\": false,\n  \"number\": \"VAR-001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:itemId/variations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":itemId",
+								"variations"
+							],
+							"variable": [
+								{
+									"key": "itemId"
+								}
+							]
+						},
+						"description": "Creates a new variation"
+					},
+					"response": []
+				},
+				{
+					"name": "Update variation",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:itemId/variations/:variationId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":itemId",
+								"variations",
+								":variationId"
+							],
+							"variable": [
+								{
+									"key": "itemId"
+								},
+								{
+									"key": "variationId"
+								}
+							]
+						},
+						"description": "Updates a variation"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete variation",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/:itemId/variations/:variationId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								":itemId",
+								"variations",
+								":variationId"
+							],
+							"variable": [
+								{
+									"key": "itemId"
+								},
+								{
+									"key": "variationId"
+								}
+							]
+						},
+						"description": "Deletes a variation"
+					},
+					"response": []
+				},
+				{
+					"name": "List barcodes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/items/barcodes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"items",
+								"barcodes"
+							]
+						},
+						"description": "Lists all barcodes"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Search orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders?page=&itemsPerPage=&with=&statusFrom=&statusTo=&createdAtFrom=&createdAtTo=&plentyId=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data (addresses, orderItems, comments, etc.)"
+								},
+								{
+									"key": "statusFrom",
+									"value": "",
+									"description": "Filter by minimum status"
+								},
+								{
+									"key": "statusTo",
+									"value": "",
+									"description": "Filter by maximum status"
+								},
+								{
+									"key": "createdAtFrom",
+									"value": "",
+									"description": "Filter by creation date from"
+								},
+								{
+									"key": "createdAtTo",
+									"value": "",
+									"description": "Filter by creation date to"
+								},
+								{
+									"key": "plentyId",
+									"value": "",
+									"description": "Filter by plenty ID"
+								}
+							]
+						},
+						"description": "Searches for orders with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Create order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": 1,\n  \"plentyId\": 0,\n  \"statusId\": 3,\n  \"addressRelations\": [],\n  \"orderItems\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders"
+							]
+						},
+						"description": "Creates a new order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get order by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId?with=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId"
+							],
+							"query": [
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data"
+								}
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Gets an order by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update order",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"statusId\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Updates an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete order",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Deletes an order"
+					},
+					"response": []
+				},
+				{
+					"name": "List order items",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"items"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Lists all items of an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Add order item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": 1,\n  \"itemVariationId\": 123,\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"items"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Adds an item to an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Update order status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/status/:statusId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"status",
+								":statusId"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								},
+								{
+									"key": "statusId"
+								}
+							]
+						},
+						"description": "Updates the status of an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get order addresses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/addresses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"addresses"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Gets all addresses of an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get order documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"documents"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Gets all documents of an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Create invoice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/documents/invoice",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"documents",
+								"invoice"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Creates an invoice for an order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get shipping information",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/orders/:orderId/shipping/packages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"orders",
+								":orderId",
+								"shipping",
+								"packages"
+							],
+							"variable": [
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Gets shipping packages of an order"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stock",
+			"item": [
+				{
+					"name": "List stock",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/stock?page=&itemsPerPage=&variationId=&warehouseId=&updatedAtFrom=&updatedAtTo=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"stock"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "variationId",
+									"value": "",
+									"description": "Filter by variation ID"
+								},
+								{
+									"key": "warehouseId",
+									"value": "",
+									"description": "Filter by warehouse ID"
+								},
+								{
+									"key": "updatedAtFrom",
+									"value": "",
+									"description": "Filter by update date from"
+								},
+								{
+									"key": "updatedAtTo",
+									"value": "",
+									"description": "Filter by update date to"
+								}
+							]
+						},
+						"description": "Lists stock entries"
+					},
+					"response": []
+				},
+				{
+					"name": "Get stock by warehouse",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId/stock?page=&itemsPerPage=&updatedAtFrom=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId",
+								"stock"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "updatedAtFrom",
+									"value": "",
+									"description": "Filter by update date"
+								}
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Gets stock for a specific warehouse"
+					},
+					"response": []
+				},
+				{
+					"name": "Book incoming stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"variationId\": 123,\n    \"quantity\": 10,\n    \"storageLocationId\": 1,\n    \"reasonId\": 1\n  }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId/stock/bookIncomingItems",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId",
+								"stock",
+								"bookIncomingItems"
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Books incoming stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Book outgoing stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"variationId\": 123,\n    \"quantity\": 5,\n    \"storageLocationId\": 1,\n    \"reasonId\": 2\n  }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId/stock/bookOutgoingItems",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId",
+								"stock",
+								"bookOutgoingItems"
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Books outgoing stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Correct stock",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"variationId\": 123,\n  \"quantity\": 50,\n  \"storageLocationId\": 1,\n  \"reasonId\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId/stock/correction",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId",
+								"stock",
+								"correction"
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Corrects stock quantity"
+					},
+					"response": []
+				},
+				{
+					"name": "List warehouses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses"
+							]
+						},
+						"description": "Lists all warehouses"
+					},
+					"response": []
+				},
+				{
+					"name": "Get warehouse",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId"
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Gets a warehouse by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "List storage locations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/warehouses/:warehouseId/locations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"warehouses",
+								":warehouseId",
+								"locations"
+							],
+							"variable": [
+								{
+									"key": "warehouseId"
+								}
+							]
+						},
+						"description": "Lists storage locations in a warehouse"
+					},
+					"response": []
+				},
+				{
+					"name": "Get stock movements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/stockmanagement/stock/movements?variationId=&warehouseId=&createdAtFrom=&createdAtTo=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"stockmanagement",
+								"stock",
+								"movements"
+							],
+							"query": [
+								{
+									"key": "variationId",
+									"value": "",
+									"description": "Filter by variation ID"
+								},
+								{
+									"key": "warehouseId",
+									"value": "",
+									"description": "Filter by warehouse ID"
+								},
+								{
+									"key": "createdAtFrom",
+									"value": "",
+									"description": "Filter by creation date from"
+								},
+								{
+									"key": "createdAtTo",
+									"value": "",
+									"description": "Filter by creation date to"
+								}
+							]
+						},
+						"description": "Gets stock movement history"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "List categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/categories?page=&itemsPerPage=&with=&lang=&type=&parentId=&plentyId=&name=&level=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"categories"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data (details, clients, etc.)"
+								},
+								{
+									"key": "lang",
+									"value": "",
+									"description": "Language"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Category type (item, container, content, blog)"
+								},
+								{
+									"key": "parentId",
+									"value": "",
+									"description": "Filter by parent category ID"
+								},
+								{
+									"key": "plentyId",
+									"value": "",
+									"description": "Filter by plenty ID"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "Filter by name"
+								},
+								{
+									"key": "level",
+									"value": "",
+									"description": "Filter by level"
+								}
+							]
+						},
+						"description": "Lists categories with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get category by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/categories/:categoryId?with=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"categories",
+								":categoryId"
+							],
+							"query": [
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data"
+								}
+							],
+							"variable": [
+								{
+									"key": "categoryId"
+								}
+							]
+						},
+						"description": "Gets a category by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"parentCategoryId\": null,\n  \"type\": \"item\",\n  \"details\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"New Category\",\n      \"description\": \"Category description\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"categories"
+							]
+						},
+						"description": "Creates a new category"
+					},
+					"response": []
+				},
+				{
+					"name": "Update category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"details\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"Updated Category\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/categories/:categoryId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"categories",
+								":categoryId"
+							],
+							"variable": [
+								{
+									"key": "categoryId"
+								}
+							]
+						},
+						"description": "Updates a category"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete category",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/categories/:categoryId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"categories",
+								":categoryId"
+							],
+							"variable": [
+								{
+									"key": "categoryId"
+								}
+							]
+						},
+						"description": "Deletes a category"
+					},
+					"response": []
+				},
+				{
+					"name": "Get category branch",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/category_branches/:categoryId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"category_branches",
+								":categoryId"
+							],
+							"variable": [
+								{
+									"key": "categoryId"
+								}
+							]
+						},
+						"description": "Gets the category branch (path from root)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contacts",
+			"item": [
+				{
+					"name": "List contacts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts?page=&itemsPerPage=&with=&email=&name=&contactId=&typeId=&updatedAtFrom=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data"
+								},
+								{
+									"key": "email",
+									"value": "",
+									"description": "Filter by email"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "Filter by name"
+								},
+								{
+									"key": "contactId",
+									"value": "",
+									"description": "Filter by contact ID"
+								},
+								{
+									"key": "typeId",
+									"value": "",
+									"description": "Filter by type ID"
+								},
+								{
+									"key": "updatedAtFrom",
+									"value": "",
+									"description": "Filter by update date"
+								}
+							]
+						},
+						"description": "Lists contacts with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get contact by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId?with=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId"
+							],
+							"query": [
+								{
+									"key": "with",
+									"value": "",
+									"description": "Include related data"
+								}
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Gets a contact by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": 1,\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"lang\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts"
+							]
+						},
+						"description": "Creates a new contact"
+					},
+					"response": []
+				},
+				{
+					"name": "Update contact",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId"
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Updates a contact"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete contact",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId"
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Deletes a contact"
+					},
+					"response": []
+				},
+				{
+					"name": "Get contact addresses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId/addresses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId",
+								"addresses"
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Gets all addresses of a contact"
+					},
+					"response": []
+				},
+				{
+					"name": "Create contact address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name1\": \"John Doe\",\n  \"address1\": \"123 Main St\",\n  \"postalCode\": \"12345\",\n  \"town\": \"City\",\n  \"countryId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId/addresses",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId",
+								"addresses"
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Creates a new address for a contact"
+					},
+					"response": []
+				},
+				{
+					"name": "Get contact orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/accounts/contacts/:contactId/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"accounts",
+								"contacts",
+								":contactId",
+								"orders"
+							],
+							"variable": [
+								{
+									"key": "contactId"
+								}
+							]
+						},
+						"description": "Gets all orders of a contact"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "List payments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments?page=&itemsPerPage=&orderId=&transactionType=&createdAtFrom=&createdAtTo=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "",
+									"description": "Page number"
+								},
+								{
+									"key": "itemsPerPage",
+									"value": "",
+									"description": "Items per page"
+								},
+								{
+									"key": "orderId",
+									"value": "",
+									"description": "Filter by order ID"
+								},
+								{
+									"key": "transactionType",
+									"value": "",
+									"description": "Filter by transaction type"
+								},
+								{
+									"key": "createdAtFrom",
+									"value": "",
+									"description": "Filter by creation date from"
+								},
+								{
+									"key": "createdAtTo",
+									"value": "",
+									"description": "Filter by creation date to"
+								}
+							]
+						},
+						"description": "Lists payments with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get payment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/:paymentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								":paymentId"
+							],
+							"variable": [
+								{
+									"key": "paymentId"
+								}
+							]
+						},
+						"description": "Gets a payment by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 100.00,\n  \"mopId\": 1,\n  \"transactionType\": 2,\n  \"status\": 2,\n  \"currency\": \"EUR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments"
+							]
+						},
+						"description": "Creates a new payment"
+					},
+					"response": []
+				},
+				{
+					"name": "Update payment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/:paymentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								":paymentId"
+							],
+							"variable": [
+								{
+									"key": "paymentId"
+								}
+							]
+						},
+						"description": "Updates a payment"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete payment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/:paymentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								":paymentId"
+							],
+							"variable": [
+								{
+									"key": "paymentId"
+								}
+							]
+						},
+						"description": "Deletes a payment"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign payment to order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/:paymentId/order/:orderId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								":paymentId",
+								"order",
+								":orderId"
+							],
+							"variable": [
+								{
+									"key": "paymentId"
+								},
+								{
+									"key": "orderId"
+								}
+							]
+						},
+						"description": "Assigns a payment to an order"
+					},
+					"response": []
+				},
+				{
+					"name": "List payment methods",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/methods",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								"methods"
+							]
+						},
+						"description": "Lists all payment methods"
+					},
+					"response": []
+				},
+				{
+					"name": "Get payment properties",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/rest/payments/:paymentId/properties",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"rest",
+								"payments",
+								":paymentId",
+								"properties"
+							],
+							"variable": [
+								{
+									"key": "paymentId"
+								}
+							]
+						},
+						"description": "Gets properties of a payment"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://your-store.plentymarkets-cloud01.com"
+		},
+		{
+			"key": "accessToken",
+			"value": ""
+		}
+	]
+}

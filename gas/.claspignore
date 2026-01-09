@@ -1,0 +1,17 @@
+# clasp push時に除外するファイル
+
+# ドキュメント
+README.md
+*.md
+
+# アーカイブ
+*.zip
+
+# 設定ファイル（GASには不要）
+.clasp.json
+.clasp.json.example
+appsscript.json
+
+# その他
+.gitignore
+node_modules/

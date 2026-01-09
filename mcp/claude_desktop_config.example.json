@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "plentyone": {
+      "command": "node",
+      "args": ["/path/to/plenty-one-mcp-server/dist/index.js"],
+      "env": {
+        "PLENTYONE_BASE_URL": "https://your-shop.plentymarkets-cloud01.com",
+        "PLENTYONE_USERNAME": "your-api-username",
+        "PLENTYONE_PASSWORD": "your-api-password"
+      }
+    }
+  }
+}
