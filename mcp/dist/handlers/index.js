@@ -15,6 +15,26 @@ import { handleListStock, handleGetWarehouseStock, handleListWarehouses, handleG
 import { handleListCategories, handleGetCategory, handleGetCategoryBranch, } from "./categories.js";
 // Payments handlers
 import { handleListPayments, handleGetPayment, handleListPaymentMethods, handleGetPaymentProperties, } from "./payments.js";
+// Attributes handlers
+import { handleListAttributes, handleGetAttribute, handleListAttributeValues, } from "./attributes.js";
+// Sales Prices handlers
+import { handleListSalesPrices, handleGetSalesPrice, } from "./salesPrices.js";
+// Properties handlers
+import { handleListProperties, handleGetProperty, handleListPropertyGroups, } from "./properties.js";
+// Tags handlers
+import { handleListTags, handleGetTag } from "./tags.js";
+// VAT handlers
+import { handleListVatConfigurations } from "./vat.js";
+// Shipping handlers
+import { handleListShippingProfiles } from "./shipping.js";
+// Accounts handlers
+import { handleListAccounts, handleGetAccount, handleListContactClasses, handleListContactTypes, } from "./accounts.js";
+// Order Meta handlers
+import { handleListOrderStatuses, handleListOrderReferrers, } from "./orderMeta.js";
+// Countries handlers
+import { handleListCountries } from "./countries.js";
+// Item Images handlers
+import { handleListItemImages } from "./itemImages.js";
 /**
  * Main tool call dispatcher
  */
@@ -126,6 +146,76 @@ export async function handleToolCall(name, args) {
             break;
         case "plenty_get_payment_properties":
             result = await handleGetPaymentProperties(args);
+            break;
+        // --- Attributes ---
+        case "plenty_list_attributes":
+            result = await handleListAttributes(args);
+            break;
+        case "plenty_get_attribute":
+            result = await handleGetAttribute(args);
+            break;
+        case "plenty_list_attribute_values":
+            result = await handleListAttributeValues(args);
+            break;
+        // --- Sales Prices ---
+        case "plenty_list_sales_prices":
+            result = await handleListSalesPrices(args);
+            break;
+        case "plenty_get_sales_price":
+            result = await handleGetSalesPrice(args);
+            break;
+        // --- Properties ---
+        case "plenty_list_properties":
+            result = await handleListProperties(args);
+            break;
+        case "plenty_get_property":
+            result = await handleGetProperty(args);
+            break;
+        case "plenty_list_property_groups":
+            result = await handleListPropertyGroups(args);
+            break;
+        // --- Tags ---
+        case "plenty_list_tags":
+            result = await handleListTags(args);
+            break;
+        case "plenty_get_tag":
+            result = await handleGetTag(args);
+            break;
+        // --- VAT ---
+        case "plenty_list_vat_configurations":
+            result = await handleListVatConfigurations(args);
+            break;
+        // --- Shipping ---
+        case "plenty_list_shipping_profiles":
+            result = await handleListShippingProfiles(args);
+            break;
+        // --- Accounts ---
+        case "plenty_list_accounts":
+            result = await handleListAccounts(args);
+            break;
+        case "plenty_get_account":
+            result = await handleGetAccount(args);
+            break;
+        case "plenty_list_contact_classes":
+            result = await handleListContactClasses();
+            break;
+        case "plenty_list_contact_types":
+            result = await handleListContactTypes();
+            break;
+        // --- Order Meta ---
+        case "plenty_list_order_statuses":
+            result = await handleListOrderStatuses(args);
+            break;
+        case "plenty_list_order_referrers":
+            result = await handleListOrderReferrers();
+            break;
+        // --- Countries ---
+        case "plenty_list_countries":
+            result = await handleListCountries(args);
+            break;
+        // --- Item Images ---
+        case "plenty_list_item_images":
+            result = await handleListItemImages(args);
             break;
         default:
             result = {

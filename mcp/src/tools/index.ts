@@ -10,6 +10,16 @@ import { ordersTools } from "./orders.js";
 import { stockTools } from "./stock.js";
 import { categoriesTools } from "./categories.js";
 import { paymentsTools } from "./payments.js";
+import { attributesTools } from "./attributes.js";
+import { salesPricesTools } from "./salesPrices.js";
+import { propertiesTools } from "./properties.js";
+import { tagsTools } from "./tags.js";
+import { vatTools } from "./vat.js";
+import { shippingTools } from "./shipping.js";
+import { accountsTools } from "./accounts.js";
+import { orderMetaTools } from "./orderMeta.js";
+import { countriesTools } from "./countries.js";
+import { itemImagesTools } from "./itemImages.js";
 
 // Export individual tool arrays for reference
 export {
@@ -20,6 +30,16 @@ export {
   stockTools,
   categoriesTools,
   paymentsTools,
+  attributesTools,
+  salesPricesTools,
+  propertiesTools,
+  tagsTools,
+  vatTools,
+  shippingTools,
+  accountsTools,
+  orderMetaTools,
+  countriesTools,
+  itemImagesTools,
 };
 
 // Export combined tools array
@@ -31,4 +51,14 @@ export const allTools: Tool[] = [
   ...stockTools,
   ...categoriesTools,
   ...paymentsTools,
+  ...attributesTools,
+  ...salesPricesTools,
+  ...propertiesTools,
+  ...tagsTools,
+  ...vatTools,
+  ...shippingTools,
+  ...accountsTools,
+  ...orderMetaTools,
+  ...countriesTools,
+  ...itemImagesTools,
 ];

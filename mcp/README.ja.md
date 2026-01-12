@@ -1,10 +1,33 @@
 # plentyONE MCP Server
 
-Claude DesktopやMCP対応AIアシスタントからplentyONE ERPのAPIを利用するためのMCPサーバーです。
+Claude Desktop、Claude Code、およびその他のMCP対応AIアシスタントからplentyONE ERP APIにアクセスするためのModel Context Protocol (MCP) サーバー。
 
 🇺🇸 [English README](README.md)
 
-## 🚀 クイックスタート
+## 機能
+
+**50ツール** - 15カテゴリで包括的なplentyONE ERP統合を実現。
+
+| カテゴリ | ツール数 | 説明 |
+|----------|----------|------|
+| Authentication | 4 | ログイン、ログアウト、トークン更新、ユーザー情報 |
+| Contacts | 4 | 一覧、取得、住所、注文履歴 |
+| Items | 6 | 検索、取得、バリエーション、バーコードタイプ、バリエーションバーコード |
+| Orders | 6 | 検索、取得、明細、住所、書類、配送 |
+| Stock | 4 | 一覧、倉庫在庫、倉庫一覧 |
+| Categories | 3 | 一覧、取得、ブランチ |
+| Payments | 4 | 一覧、取得、支払い方法、プロパティ |
+| Attributes | 3 | 一覧、取得、値（サイズ、色など） |
+| Sales Prices | 2 | 価格設定の一覧、取得 |
+| Properties | 3 | 一覧、取得、グループ |
+| Tags | 2 | 一覧、取得 |
+| VAT | 1 | 消費税設定一覧 |
+| Accounts | 4 | 一覧、取得、顧客クラス、コンタクトタイプ |
+| Order Meta | 2 | ステータス、リファラー |
+| Countries | 1 | 国一覧 |
+| Item Images | 1 | 商品画像一覧 |
+
+## クイックスタート
 
 ### インストール
 
@@ -14,7 +37,7 @@ npm install
 npm run build
 ```
 
-### Claude Code設定
+### Claude Code 設定
 
 `claude mcp add` コマンドでMCPサーバーを追加:
 
@@ -27,15 +50,16 @@ claude mcp add plentyone \
 ```
 
 インストール確認:
+
 ```bash
 claude mcp list
 ```
 
-### Claude Desktop設定
+### Claude Desktop 設定
 
-Claude Desktopの設定ファイルに追加:
+設定ファイルに追加:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
@@ -54,110 +78,75 @@ Claude Desktopの設定ファイルに追加:
 }
 ```
 
-設定例は `claude_desktop_config.example.json` を参照してください。
+### Gemini CLI 設定
 
-## 🔧 利用可能なツール（全25ツール）
+`~/.gemini/settings.json` に追加:
 
-### 認証（4ツール）
-
-| ツール | 説明 |
-|--------|------|
-| `plenty_login` | plentyONEにログイン |
-| `plenty_logout` | ログアウト・セッションクリア |
-| `plenty_refresh_token` | アクセストークンを更新 |
-| `plenty_get_authorized_user` | 現在のユーザー情報を取得 |
-
-### 顧客（4ツール）
-
-| ツール | 説明 |
-|--------|------|
-| `plenty_list_contacts` | 顧客一覧を取得（メール、名前、タイプ、日付でフィルタ） |
-| `plenty_get_contact` | ID指定で顧客詳細を取得（関連データ含む） |
-| `plenty_get_contact_addresses` | 顧客の住所一覧を取得 |
-| `plenty_get_contact_orders` | 顧客の注文履歴を取得 |
-
-### 商品（5ツール）
-
-| ツール | 説明 |
-|--------|------|
-| `plenty_search_items` | 商品を検索（名前、IDでフィルタ、ページネーション対応） |
-| `plenty_get_item` | ID指定で商品詳細を取得 |
-| `plenty_list_variations` | 商品のバリエーション一覧を取得 |
-| `plenty_get_variation` | 商品ID・バリエーションID指定で詳細を取得 |
-| `plenty_list_barcodes` | バーコード一覧を取得 |
-
-### 注文（6ツール）
-
-| ツール | 説明 |
-|--------|------|
-| `plenty_search_orders` | 注文を検索（ステータス、日付、plentyIdでフィルタ） |
-| `plenty_get_order` | ID指定で注文詳細を取得（関連データ含む） |
-| `plenty_get_order_items` | 注文明細を取得 |
-| `plenty_get_order_addresses` | 請求先・配送先住所を取得 |
-| `plenty_get_order_documents` | 請求書、納品書等の伝票を取得 |
-| `plenty_get_order_shipping` | 配送パッケージ・追跡情報を取得 |
-
-### 在庫（6ツール）
-
-| ツール | 説明 |
-|--------|------|
-| `plenty_list_stock` | 在庫一覧を取得（フィルタ対応） |
-| `plenty_get_warehouse_stock` | 指定倉庫の在庫を取得 |
-| `plenty_list_warehouses` | 倉庫一覧を取得 |
-| `plenty_get_warehouse` | ID指定で倉庫詳細を取得 |
-| `plenty_list_warehouse_locations` | 倉庫内の棚番一覧を取得 |
-| `plenty_get_stock_movements` | 在庫移動履歴を取得 |
-
-## 📖 使用例
-
-設定後、Claudeに以下のように質問できます:
-
-- 「plentyONEにログインして、今日の注文を見せて」
-- 「customer@example.com のメールアドレスで顧客を検索して」
-- 「バリエーション1234の在庫数は？」
-- 「過去7日間の注文を表示して」
-- 「倉庫一覧を教えて」
-
-## 🔧 開発
-
-### ビルド
-
-```bash
-npm run build
+```json
+{
+  "mcpServers": {
+    "plentyone": {
+      "command": "node",
+      "args": ["/path/to/plentyone-tools/mcp/dist/index.js"],
+      "env": {
+        "PLENTYONE_BASE_URL": "https://your-shop.plentymarkets-cloud01.com",
+        "PLENTYONE_USERNAME": "your_api_username",
+        "PLENTYONE_PASSWORD": "your_api_password"
+      }
+    }
+  }
+}
 ```
 
-### ウォッチモード
+## 使用例
+
+```
+ユーザー: 「山田」という名前のコンタクトを検索して
+アシスタント: [plenty_list_contacts を name="山田" で呼び出し]
+
+ユーザー: 倉庫1の在庫を見せて
+アシスタント: [plenty_get_warehouse_stock を warehouseId=1 で呼び出し]
+
+ユーザー: 今日の注文は？
+アシスタント: [plenty_search_orders を createdAtFrom="2026-01-11" で呼び出し]
+
+ユーザー: 全ての支払い方法を表示
+アシスタント: [plenty_list_payment_methods を呼び出し]
+
+ユーザー: サイズと色の属性を見せて
+アシスタント: [plenty_list_attributes を呼び出し]
+```
+
+## 変更履歴
+
+### v1.2.0 (2026-01-11)
+- 17の新ツール追加: Attributes, Sales Prices, Properties, Tags, VAT, Accounts, Order Meta, Countries, Item Images
+- 機能しない3ツールを削除 (shipping_profiles, warehouse_locations, stock_movements)
+- **合計: 50ツール** (v1.1.0: 33 → v1.2.0: 50)
+
+### v1.1.0
+- Categories (3ツール), Payments (4ツール) 追加
+- モジュラーアーキテクチャへのリファクタリング
+- **合計: 33ツール** (v1.0.0: 25 → v1.1.0: 33)
+
+### v1.0.0
+- 初回リリース
+- Authentication, Contacts, Items, Orders, Stock
+- **合計: 25ツール**
+
+## 開発
 
 ```bash
+# ウォッチモード
 npm run dev
+
+# ビルド
+npm run build
+
+# 実行
+npm start
 ```
 
-### プロジェクト構成
+## ライセンス
 
-```
-mcp/
-├── src/
-│   └── index.ts           # メインサーバー実装
-├── dist/                   # コンパイル出力
-├── package.json
-├── tsconfig.json
-└── claude_desktop_config.example.json
-```
-
-## ⚙️ 環境変数
-
-| 変数 | 必須 | 説明 |
-|------|------|------|
-| `PLENTYONE_BASE_URL` | Yes | plentyONE APIのベースURL |
-| `PLENTYONE_USERNAME` | Yes | APIユーザー名 |
-| `PLENTYONE_PASSWORD` | Yes | APIパスワード |
-
-## 🔒 セキュリティ
-
-- アクセストークンはメモリ内に保存され、セッション終了時に破棄されます
-- 401レスポンス時は自動的にトークンリフレッシュを試みます
-- 認証情報をバージョン管理にコミットしないでください
-
-## 📝 ライセンス
-
-Internal use only - Knitido GmbH
+MIT
