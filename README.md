@@ -8,8 +8,8 @@ A collection of tools and clients for integrating with the plentyONE ERP system.
 
 ```
 plentyone-tools/
-├── mcp/          # MCP Server (for Claude Desktop / AI assistants)
-├── gas/          # Google Apps Script (for Workspace Studio)
+├── mcp/          # MCP Server (for Claude Desktop / Claude Code / AI assistants)
+├── gas/          # Google Apps Script (for Google Workspace)
 └── docs/         # Documentation & reference materials
     ├── openapi/  # plentyONE REST API OpenAPI specification
     └── postman/  # Postman collection & environment
@@ -19,17 +19,28 @@ plentyone-tools/
 
 ### MCP Server (`mcp/`)
 
-A Model Context Protocol server for accessing plentyONE API from Claude Desktop and other MCP-compatible AI assistants.
+A Model Context Protocol server for accessing plentyONE API from Claude Desktop, Claude Code, and other MCP-compatible AI assistants.
 
-**Features (25 tools):**
+**Features (50 tools):**
 
 | Category | Tools |
 |----------|-------|
-| Authentication | login, logout, token refresh, get authorized user |
-| Contacts | list, get by ID, get addresses, get orders |
-| Items | search, get by ID, list variations, get variation, list barcodes |
-| Orders | search, get by ID, get items, get addresses, get documents, get shipping |
-| Stock | list, get warehouse stock, list warehouses, get warehouse, list locations, get movements |
+| Authentication | login, logout, token refresh, get user |
+| Contacts | list, get, addresses, orders |
+| Items | search, get, variations, barcode types, variation barcodes |
+| Orders | search, get, items, addresses, documents, shipping |
+| Stock | list, warehouse stock, warehouses |
+| Categories | list, get, branch |
+| Payments | list, get, methods, properties |
+| Attributes | list, get, values |
+| Sales Prices | list, get |
+| Properties | list, get, groups |
+| Tags | list, get |
+| VAT | list configurations |
+| Accounts | list, get, contact classes/types |
+| Order Meta | statuses, referrers |
+| Countries | list |
+| Item Images | list |
 
 ```bash
 cd mcp
@@ -67,29 +78,32 @@ Postman collection and environment files for testing plentyONE REST API.
 - Node.js 18+ (for MCP Server)
 - [clasp](https://github.com/google/clasp) (for Google Apps Script)
 
-### Option 1: MCP Server (Claude Code / Claude Desktop)
+### Option 1: MCP Server (Claude Desktop / Claude Code)
 
 ```bash
 cd mcp
 npm install
 npm run build
 
-# For Claude Code
+# For Claude Code:
 claude mcp add plentyone \
   -e PLENTYONE_BASE_URL=https://your-shop.plentymarkets-cloud01.com \
   -e PLENTYONE_USERNAME=your_username \
   -e PLENTYONE_PASSWORD=your_password \
-  -- node /path/to/plentyone-tools/mcp/dist/index.js
+  -- node /path/to/mcp/dist/index.js
 
-# For Claude Desktop
+# For Claude Desktop:
 # See mcp/claude_desktop_config.example.json
 ```
 
-### Option 2: Google Apps Script (Workspace Studio)
+### Option 2: Google Apps Script (Google Workspace)
 
 ```bash
 # Install clasp globally
 npm install -g @google/clasp
+
+# Enable Google Apps Script API at:
+# https://script.google.com/home/usersettings
 
 # Login to Google
 clasp login
@@ -97,13 +111,13 @@ clasp login
 # Create GAS project
 cd gas
 cp .clasp.json.example .clasp.json
-clasp create-script --title "plentyONE API Client" --rootDir ./src
+clasp create --title "plentyONE API Client" --rootDir ./src
 
 # Push code to GAS
 clasp push
 
 # Open GAS editor to configure credentials
-clasp open-script
+clasp open
 ```
 
 ## ⚙️ Configuration
@@ -125,4 +139,4 @@ clasp open-script
 
 ## 📝 License
 
-Internal use only - Knitido GmbH
+MIT - Knitido GmbH
