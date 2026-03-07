@@ -232,6 +232,46 @@ Add to `~/.gemini/settings.json`:
 |------|-------------|
 | `plenty_list_item_images` | List images for an item |
 
+## HTTP Transport (Docker)
+
+The server supports HTTP transport via Streamable HTTP, suitable for remote or containerized deployments.
+
+### Quick Start with Docker Compose
+
+```bash
+cd mcp
+
+# Set environment variables
+export PLENTYONE_BASE_URL=https://your-shop.plentymarkets-cloud01.com
+export PLENTYONE_USERNAME=your_api_username
+export PLENTYONE_PASSWORD=your_api_password
+
+# Build and run
+docker compose up --build -d
+```
+
+The server will be available at `http://localhost:3102/mcp` with a health check at `http://localhost:3102/health`.
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MCP_TRANSPORT` | Transport mode (`stdio` or `http`) | `stdio` |
+| `MCP_PORT` | HTTP server port | `3102` |
+| `MCP_HOST` | HTTP server bind address | `0.0.0.0` |
+| `PLENTYONE_BASE_URL` | plentyONE API base URL | (required) |
+| `PLENTYONE_USERNAME` | API username | (required) |
+| `PLENTYONE_PASSWORD` | API password | (required) |
+
+### Running HTTP Mode Without Docker
+
+```bash
+MCP_TRANSPORT=http MCP_PORT=3102 \
+  PLENTYONE_BASE_URL=https://your-shop.plentymarkets-cloud01.com \
+  PLENTYONE_USERNAME=user PLENTYONE_PASSWORD=pass \
+  node dist/index.js
+```
+
 ## Usage Examples
 
 ```
@@ -252,6 +292,13 @@ Assistant: [calls plenty_list_attributes]
 ```
 
 ## Changelog
+
+### v1.3.0 (2026-03-07)
+- Added HTTP transport support via Streamable HTTP (MCP_TRANSPORT=http)
+- Added Docker support (Dockerfile + docker-compose.yml)
+- Added /health endpoint
+- Session management with per-session Server instances
+- Updated @modelcontextprotocol/sdk to v1.27.1
 
 ### v1.2.0 (2026-01-11)
 - Added 17 new tools for Attributes, Sales Prices, Properties, Tags, VAT, Accounts, Order Meta, Countries, Item Images

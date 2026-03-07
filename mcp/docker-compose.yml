@@ -1,0 +1,11 @@
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "3102:3102"
+    environment:
+      - MCP_TRANSPORT=http
+      - MCP_PORT=3102
+      - PLENTYONE_BASE_URL=${PLENTYONE_BASE_URL}
+      - PLENTYONE_USERNAME=${PLENTYONE_USERNAME}
+      - PLENTYONE_PASSWORD=${PLENTYONE_PASSWORD}
