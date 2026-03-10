@@ -26,9 +26,7 @@ const PII_FIELD_PATTERNS: RegExp[] = [
   /^(street|address)\d*$/i,
   /^(house|apt|suite|unit)(number)?$/i,
   /^(postal|zip|post)(code)?$/i,
-  /^(city|town|locality|suburb)$/i,
-  /^(state|province|region|county)$/i,
-  // Note: country is NOT PII (too general)
+  // Note: country, city/town, state/region are NOT PII (geographic, too general)
 
   // Financial
   /^(iban|bic|swift|account(number)?|routing(number)?|bank(name)?)$/i,
@@ -57,6 +55,8 @@ const SAFE_IN_SUBTREE: RegExp[] = [
   /^country(Code(V\d)?|Id|Name)?$/i,
   /^(company|companyName)$/i,
   /^(id|countryId|stateId)$/i,
+  /^(city|town|locality|suburb)$/i,
+  /^(state|province|region|county)$/i,
 ];
 
 function isPIIFieldName(key: string): boolean {

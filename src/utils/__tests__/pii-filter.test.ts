@@ -52,7 +52,7 @@ describe('PII Filter (enabled by default)', () => {
     const result = filterPII(input);
     expect(result.orderId).toBe('ORD-001');
     expect(result.ShippingAddress.street).toBe('[FILTERED]');
-    expect(result.ShippingAddress.city).toBe('[FILTERED]');
+    expect(result.ShippingAddress.city).toBe('Berlin');  // city is safe in subtree
     expect(result.ShippingAddress.postalCode).toBe('[FILTERED]');
     expect(result.ShippingAddress.country).toBe('Germany') // country is safe in subtree;
   });
@@ -183,7 +183,7 @@ describe('PII Filter (enabled by default)', () => {
     expect(result.addresses[0].name2).toBe('[FILTERED]');
     expect(result.addresses[0].address1).toBe('[FILTERED]');
     expect(result.addresses[0].postalCode).toBe('[FILTERED]');
-    expect(result.addresses[0].town).toBe('[FILTERED]');
+    expect(result.addresses[0].town).toBe('Berlin');  // town/city is not PII
     expect(result.addresses[0].phone).toBe('[FILTERED]');
     // countryId is NOT PII
     expect(result.addresses[0].countryId).toBe(1);
@@ -209,9 +209,9 @@ describe('PII Filter (enabled by default)', () => {
     const result = filterPII(input);
     expect(result.orderId).toBe(123);
     expect(result.deliveryAddress.name1).toBe('[FILTERED]');
-    expect(result.deliveryAddress.town).toBe('[FILTERED]');
+    expect(result.deliveryAddress.town).toBe('Berlin');  // town/city is safe in subtree
     expect(result.invoiceAddress.name1).toBe('[FILTERED]');
-    expect(result.invoiceAddress.town).toBe('[FILTERED]');
+    expect(result.invoiceAddress.town).toBe('München');  // town/city is safe in subtree
   });
 
   // Financial fields
