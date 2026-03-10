@@ -9,6 +9,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+import { filterPII } from "./utils/pii-filter.js";
 
 // ============================================================================
 // Configuration
@@ -1468,7 +1469,7 @@ function registerHandlers(s: Server): void {
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2),
+            text: JSON.stringify(filterPII(result), null, 2),
           },
         ],
       };
