@@ -120,6 +120,18 @@ clasp push
 clasp open
 ```
 
+## PII Filtering
+
+Personal data (names, addresses, emails, phone numbers, financial details) is automatically
+filtered from all API responses before being returned to MCP clients.
+
+- **Default**: Enabled (all PII fields replaced with `[FILTERED]`)
+- **Disable**: Set environment variable `PII_FILTER_ENABLED=false`
+- **Server-side only**: Cannot be controlled by MCP clients
+
+This ensures GDPR compliance when using LLM-based MCP clients (e.g., AI assistants)
+that may process data through third-party AI services.
+
 ## ⚙️ Configuration
 
 ### plentyONE API Credentials

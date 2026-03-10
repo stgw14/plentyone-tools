@@ -3,6 +3,7 @@
  */
 
 import { ApiResponse } from "../types.js";
+import { filterPII } from "../utils/pii-filter.js";
 
 // Auth handlers
 import {
@@ -345,5 +346,5 @@ export async function handleToolCall(
       };
   }
 
-  return JSON.stringify(result, null, 2);
+  return JSON.stringify(filterPII(result), null, 2);
 }
