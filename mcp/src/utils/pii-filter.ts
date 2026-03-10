@@ -11,7 +11,8 @@ const FILTERED = '[FILTERED]';
 const PII_FIELD_PATTERNS: RegExp[] = [
   // Names — require a prefix to avoid matching generic "name" (e.g., order name "#1001")
   /^(first|last|middle|full|display|buyer|owner|customer|sender|recipient|contact)[_-]?name\d*$/i,
-  /^name[1-4]$/i,  // plentyONE address name1-name4
+  // Note: name1-4 removed from global patterns — they are PII only in address subtrees.
+  // Handled via PII_ONLY_IN_SUBTREE instead.
   /^(formOfAddress|salutation)$/i,
 
   // Email
@@ -48,6 +49,7 @@ const PII_SUBTREE_KEYS: RegExp[] = [
   /^(ShippingAddress|BillingAddress|DefaultAddress|BuyerInfo)$/i,
   /^(shippingAddress|billingAddress|defaultAddress|buyerInfo)$/i,
   /^(deliveryAddress|invoiceAddress|senderAddress)$/i,
+  /^addresses$/i,  // plentyONE contact/order addresses array
 ];
 
 // Fields that are safe to keep even inside PII subtrees
@@ -57,6 +59,12 @@ const SAFE_IN_SUBTREE: RegExp[] = [
   /^(id|countryId|stateId)$/i,
   /^(city|town|locality|suburb)$/i,
   /^(state|province|region|county)$/i,
+];
+
+// Fields that are PII only inside PII subtrees (addresses), not globally.
+// plentyONE name1-4 are person names in addresses but product names in texts.
+const PII_ONLY_IN_SUBTREE: RegExp[] = [
+  /^name[1-4]$/i,
 ];
 
 function isPIIFieldName(key: string): boolean {
@@ -91,6 +99,10 @@ function isPlentyOptionWithPII(obj: Record<string, any>): boolean {
   return isContactOrAddressOption && PLENTY_PII_OPTION_TYPE_IDS.has(obj.typeId);
 }
 
+function isPIIOnlyInSubtree(key: string): boolean {
+  return PII_ONLY_IN_SUBTREE.some(pattern => pattern.test(key));
+}
+
 function filterObject(obj: any, inPIISubtree: boolean = false): any {
   if (obj === null || obj === undefined) return obj;
 
@@ -113,6 +125,9 @@ function filterObject(obj: any, inPIISubtree: boolean = false): any {
       } else if (inPIISubtree && isSafeInSubtree(key)) {
         // Safe field inside PII subtree — preserve it
         filtered[key] = value;
+      } else if (inPIISubtree && isPIIOnlyInSubtree(key)) {
+        // name1-4 etc. — PII only inside address subtrees
+        filtered[key] = typeof value === 'object' && value !== null ? filterObject(value, true) : FILTERED;
       } else if (inPIISubtree || isPIIFieldName(key)) {
         // Replace value with [FILTERED] (keep key for structure visibility)
         if (typeof value === 'object' && value !== null) {
