@@ -11,7 +11,8 @@ const FILTERED = '[FILTERED]';
 const PII_FIELD_PATTERNS: RegExp[] = [
   // Names — require a prefix to avoid matching generic "name" (e.g., order name "#1001")
   /^(first|last|middle|full|display|buyer|owner|customer|sender|recipient|contact)[_-]?name\d*$/i,
-  /^name[1-4]$/i,  // plentyONE address name1-name4
+  // Note: name1-4 removed from global patterns — they are PII only in address subtrees.
+  // Handled via PII_ONLY_IN_SUBTREE instead.
   /^(formOfAddress|salutation)$/i,
 
   // Email
@@ -48,6 +49,7 @@ const PII_SUBTREE_KEYS: RegExp[] = [
   /^(ShippingAddress|BillingAddress|DefaultAddress|BuyerInfo)$/i,
   /^(shippingAddress|billingAddress|defaultAddress|buyerInfo)$/i,
   /^(deliveryAddress|invoiceAddress|senderAddress)$/i,
+  /^addresses$/i,  // plentyONE contact/order addresses array
 ];
 
 // Fields that are safe to keep even inside PII subtrees
@@ -59,11 +61,10 @@ const SAFE_IN_SUBTREE: RegExp[] = [
   /^(state|province|region|county)$/i,
 ];
 
-// Object keys whose subtree contains product data, not personal data.
-// name1-name3 inside these are product names, not person names.
-const PRODUCT_TEXT_SUBTREE_KEYS: RegExp[] = [
-  /^texts$/i,
-  /^descriptions$/i,
+// Fields that are PII only inside PII subtrees (addresses), not globally.
+// plentyONE name1-4 are person names in addresses but product names in texts.
+const PII_ONLY_IN_SUBTREE: RegExp[] = [
+  /^name[1-4]$/i,
 ];
 
 function isPIIFieldName(key: string): boolean {
@@ -98,15 +99,15 @@ function isPlentyOptionWithPII(obj: Record<string, any>): boolean {
   return isContactOrAddressOption && PLENTY_PII_OPTION_TYPE_IDS.has(obj.typeId);
 }
 
-function isProductTextSubtree(key: string): boolean {
-  return PRODUCT_TEXT_SUBTREE_KEYS.some(pattern => pattern.test(key));
+function isPIIOnlyInSubtree(key: string): boolean {
+  return PII_ONLY_IN_SUBTREE.some(pattern => pattern.test(key));
 }
 
-function filterObject(obj: any, inPIISubtree: boolean = false, inProductTextSubtree: boolean = false): any {
+function filterObject(obj: any, inPIISubtree: boolean = false): any {
   if (obj === null || obj === undefined) return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map(item => filterObject(item, inPIISubtree, inProductTextSubtree));
+    return obj.map(item => filterObject(item, inPIISubtree));
   }
 
   if (typeof obj === 'object') {
@@ -115,30 +116,27 @@ function filterObject(obj: any, inPIISubtree: boolean = false, inProductTextSubt
 
     const filtered: any = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (isProductTextSubtree(key)) {
-        // Product text subtree — name1-3 are product names, not PII
-        filtered[key] = filterObject(value, inPIISubtree, true);
-      } else if (isPIISubtree(key)) {
+      if (isPIISubtree(key)) {
         // Filter subtree, but safe fields within are preserved
-        filtered[key] = filterObject(value, true, false);
+        filtered[key] = filterObject(value, true);
       } else if (isPlentyPIIOption && key === 'value') {
         // plentyONE option with PII typeId — filter the value field
         filtered[key] = FILTERED;
       } else if (inPIISubtree && isSafeInSubtree(key)) {
         // Safe field inside PII subtree — preserve it
         filtered[key] = value;
-      } else if (inProductTextSubtree && isPIIFieldName(key)) {
-        // Inside product text subtree — skip PII filtering (these are product names, not person names)
-        filtered[key] = filterObject(value, false, true);
+      } else if (inPIISubtree && isPIIOnlyInSubtree(key)) {
+        // name1-4 etc. — PII only inside address subtrees
+        filtered[key] = typeof value === 'object' && value !== null ? filterObject(value, true) : FILTERED;
       } else if (inPIISubtree || isPIIFieldName(key)) {
         // Replace value with [FILTERED] (keep key for structure visibility)
         if (typeof value === 'object' && value !== null) {
-          filtered[key] = filterObject(value, true, false);
+          filtered[key] = filterObject(value, true);
         } else {
           filtered[key] = FILTERED;
         }
       } else {
-        filtered[key] = filterObject(value, false, inProductTextSubtree);
+        filtered[key] = filterObject(value, false);
       }
     }
     return filtered;

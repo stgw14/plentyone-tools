@@ -395,15 +395,17 @@ describe('plentyONE contact options PII filtering', () => {
 
   it('should filter value in address options with typeId=4 (phone)', () => {
     const input = {
-      id: 27807,
-      name2: 'Pia',
-      options: [
-        { id: 41636, addressId: 27807, typeId: 4, value: '01714055068', position: 0 },
-      ],
+      addresses: [{
+        id: 27807,
+        name2: 'Pia',
+        options: [
+          { id: 41636, addressId: 27807, typeId: 4, value: '01714055068', position: 0 },
+        ],
+      }],
     };
     const result = filterPII(input);
-    expect(result.name2).toBe('[FILTERED]');
-    expect(result.options[0].value).toBe('[FILTERED]');
+    expect(result.addresses[0].name2).toBe('[FILTERED]');
+    expect(result.addresses[0].options[0].value).toBe('[FILTERED]');
   });
 
   it('should NOT filter value in contact options with non-PII typeId', () => {
