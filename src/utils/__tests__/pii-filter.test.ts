@@ -239,6 +239,83 @@ describe('PII Filter (enabled by default)', () => {
     expect(filterPII(null)).toBe(null);
     expect(filterPII(undefined)).toBe(undefined);
   });
+
+  // Product text subtree — name1-3 are product names, NOT PII
+  it('should NOT filter name1-3 inside texts subtree (product names)', () => {
+    const input = {
+      id: 144,
+      texts: [
+        {
+          lang: 'de',
+          name1: 'Knitido Plus Kokoro',
+          name2: 'Kokoro Füßlinge',
+          name3: 'Füßlinge mit offenen Zehen',
+          description: '<p>Offen, leicht und nachhaltig</p>',
+          urlPath: 'zehensocken/kokoro',
+        },
+        {
+          lang: 'en',
+          name1: 'Knitido Plus Kokoro',
+          name2: 'Kokoro Toe Liner',
+          name3: 'Toe Liner with Open Toes',
+          description: '<p>Open, light and sustainable</p>',
+          urlPath: 'toe-socks/kokoro',
+        },
+      ],
+    };
+    const result = filterPII(input);
+    expect(result.id).toBe(144);
+    // Product names should NOT be filtered
+    expect(result.texts[0].name1).toBe('Knitido Plus Kokoro');
+    expect(result.texts[0].name2).toBe('Kokoro Füßlinge');
+    expect(result.texts[0].name3).toBe('Füßlinge mit offenen Zehen');
+    expect(result.texts[1].name1).toBe('Knitido Plus Kokoro');
+    expect(result.texts[1].name2).toBe('Kokoro Toe Liner');
+    expect(result.texts[1].name3).toBe('Toe Liner with Open Toes');
+    // Other fields preserved
+    expect(result.texts[0].description).toBe('<p>Offen, leicht und nachhaltig</p>');
+  });
+
+  it('should NOT filter name1-3 inside descriptions subtree', () => {
+    const input = [
+      {
+        lang: 'de',
+        name1: 'Marathon TS',
+        name2: 'Marathon Zehensocken',
+        name3: 'TS Zehensocken',
+        description: '<p>Die Knitido Marathon</p>',
+      },
+    ];
+    // Wrap in descriptions key
+    const wrapped = { descriptions: input };
+    const result = filterPII(wrapped);
+    expect(result.descriptions[0].name1).toBe('Marathon TS');
+    expect(result.descriptions[0].name2).toBe('Marathon Zehensocken');
+  });
+
+  it('should still filter address name1-4 even when product texts exist', () => {
+    const input = {
+      id: 144,
+      texts: [
+        { lang: 'de', name1: 'Kokoro', name2: 'Füßlinge' },
+      ],
+      deliveryAddress: {
+        name1: 'Max Mustermann',
+        name2: 'c/o Firma',
+        address1: 'Berliner Str. 10',
+        town: 'Berlin',
+      },
+    };
+    const result = filterPII(input);
+    // Product names preserved
+    expect(result.texts[0].name1).toBe('Kokoro');
+    expect(result.texts[0].name2).toBe('Füßlinge');
+    // Address names filtered
+    expect(result.deliveryAddress.name1).toBe('[FILTERED]');
+    expect(result.deliveryAddress.name2).toBe('[FILTERED]');
+    expect(result.deliveryAddress.address1).toBe('[FILTERED]');
+    expect(result.deliveryAddress.town).toBe('Berlin');
+  });
 });
 
 // Test 7: PII_FILTER_ENABLED=false → passthrough
@@ -318,15 +395,17 @@ describe('plentyONE contact options PII filtering', () => {
 
   it('should filter value in address options with typeId=4 (phone)', () => {
     const input = {
-      id: 27807,
-      name2: 'Pia',
-      options: [
-        { id: 41636, addressId: 27807, typeId: 4, value: '01714055068', position: 0 },
-      ],
+      addresses: [{
+        id: 27807,
+        name2: 'Pia',
+        options: [
+          { id: 41636, addressId: 27807, typeId: 4, value: '01714055068', position: 0 },
+        ],
+      }],
     };
     const result = filterPII(input);
-    expect(result.name2).toBe('[FILTERED]');
-    expect(result.options[0].value).toBe('[FILTERED]');
+    expect(result.addresses[0].name2).toBe('[FILTERED]');
+    expect(result.addresses[0].options[0].value).toBe('[FILTERED]');
   });
 
   it('should NOT filter value in contact options with non-PII typeId', () => {
