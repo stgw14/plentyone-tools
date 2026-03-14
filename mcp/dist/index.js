@@ -4,6 +4,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
+import { filterPII } from "./utils/pii-filter.js";
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -500,6 +501,29 @@ const tools = [
                 attributeId: { type: "number", description: "Attribute ID" },
             },
             required: ["attributeId"],
+        },
+    },
+    {
+        name: "plenty_get_attribute_names",
+        description: "Get multilingual names of an attribute (e.g., DE='Farbe', EN='Color'). Returns the official translated names used in the shop frontend.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                attributeId: { type: "number", description: "The attribute ID" },
+            },
+            required: ["attributeId"],
+        },
+    },
+    {
+        name: "plenty_get_attribute_value_names",
+        description: "Get multilingual names of an attribute value (e.g., DE='rosa (015)', EN='candy-pink (015)'). Returns the official translated names, which may differ from the backendName or comment fields.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                attributeId: { type: "number", description: "The attribute ID (parent attribute)" },
+                valueId: { type: "number", description: "The attribute value ID" },
+            },
+            required: ["attributeId", "valueId"],
         },
     },
     // --- Sales Prices (2) ---
@@ -1076,6 +1100,10 @@ async function handleToolCall(name, args) {
             return apiRequest("GET", `/rest/items/attributes/${args.attributeId}`);
         case "plenty_list_attribute_values":
             return apiRequest("GET", `/rest/items/attributes/${args.attributeId}/values`);
+        case "plenty_get_attribute_names":
+            return apiRequest("GET", `/rest/items/attributes/${args.attributeId}/names`);
+        case "plenty_get_attribute_value_names":
+            return apiRequest("GET", `/rest/items/attribute_values/${args.valueId}/names`);
         // --- Sales Prices ---
         case "plenty_list_sales_prices":
             return apiRequest("GET", "/rest/items/sales_prices", undefined, {
@@ -1249,7 +1277,7 @@ function registerHandlers(s) {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(result, null, 2),
+                        text: JSON.stringify(filterPII(result), null, 2),
                     },
                 ],
             };

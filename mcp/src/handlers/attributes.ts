@@ -38,3 +38,17 @@ export async function handleListAttributeValues(
     },
   });
 }
+
+export async function handleGetAttributeNames(
+  args: Record<string, unknown>
+): Promise<ApiResponse> {
+  const attributeId = args.attributeId as number;
+  return makeRequest(`/rest/items/attributes/${attributeId}/names`);
+}
+
+export async function handleGetAttributeValueNames(
+  args: Record<string, unknown>
+): Promise<ApiResponse> {
+  const valueId = args.valueId as number;
+  return makeRequest(`/rest/items/attribute_values/${valueId}/names`);
+}
