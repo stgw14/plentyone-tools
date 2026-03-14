@@ -4,6 +4,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
+import { filterPII } from "./utils/pii-filter.js";
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -1249,7 +1250,7 @@ function registerHandlers(s) {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(result, null, 2),
+                        text: JSON.stringify(filterPII(result), null, 2),
                     },
                 ],
             };
