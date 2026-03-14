@@ -1,6 +1,7 @@
 /**
  * Handlers Index - Aggregates all handlers and provides the main handleToolCall function
  */
+import { filterPII } from "../utils/pii-filter.js";
 // Auth handlers
 import { handleLogin, handleLogout, handleRefreshToken, handleGetAuthorizedUser, } from "./auth.js";
 // Contacts handlers
@@ -16,7 +17,7 @@ import { handleListCategories, handleGetCategory, handleGetCategoryBranch, } fro
 // Payments handlers
 import { handleListPayments, handleGetPayment, handleListPaymentMethods, handleGetPaymentProperties, } from "./payments.js";
 // Attributes handlers
-import { handleListAttributes, handleGetAttribute, handleListAttributeValues, } from "./attributes.js";
+import { handleListAttributes, handleGetAttribute, handleListAttributeValues, handleGetAttributeNames, handleGetAttributeValueNames, } from "./attributes.js";
 // Sales Prices handlers
 import { handleListSalesPrices, handleGetSalesPrice, } from "./salesPrices.js";
 // Properties handlers
@@ -157,6 +158,12 @@ export async function handleToolCall(name, args) {
         case "plenty_list_attribute_values":
             result = await handleListAttributeValues(args);
             break;
+        case "plenty_get_attribute_names":
+            result = await handleGetAttributeNames(args);
+            break;
+        case "plenty_get_attribute_value_names":
+            result = await handleGetAttributeValueNames(args);
+            break;
         // --- Sales Prices ---
         case "plenty_list_sales_prices":
             result = await handleListSalesPrices(args);
@@ -226,6 +233,6 @@ export async function handleToolCall(name, args) {
                 },
             };
     }
-    return JSON.stringify(result, null, 2);
+    return JSON.stringify(filterPII(result), null, 2);
 }
 //# sourceMappingURL=index.js.map

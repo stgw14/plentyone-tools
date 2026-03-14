@@ -71,6 +71,8 @@ import {
   handleListAttributes,
   handleGetAttribute,
   handleListAttributeValues,
+  handleGetAttributeNames,
+  handleGetAttributeValueNames,
 } from "./attributes.js";
 
 // Sales Prices handlers
@@ -275,6 +277,14 @@ export async function handleToolCall(
 
     case "plenty_list_attribute_values":
       result = await handleListAttributeValues(args);
+      break;
+
+    case "plenty_get_attribute_names":
+      result = await handleGetAttributeNames(args);
+      break;
+
+    case "plenty_get_attribute_value_names":
+      result = await handleGetAttributeValueNames(args);
       break;
 
     // --- Sales Prices ---
