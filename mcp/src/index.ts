@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { timingSafeEqual } from "node:crypto";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -9,7 +10,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { filterPII } from "./utils/pii-filter.js";
+import { filterPII, filterPIIString } from "./utils/pii-filter.js";
 
 // ============================================================================
 // Configuration
@@ -129,10 +130,28 @@ async function apiRequest(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API error ${response.status}: ${errorText}`);
+    // Error bodies from plentyONE may echo customer/address data — run them
+    // through the PII filter before surfacing to the MCP client (success
+    // responses are filtered at the CallTool handler; errors bypassed it).
+    throw new Error(`API error ${response.status}: ${filterPIIString(errorText)}`);
   }
 
   return response.json();
+}
+
+/**
+ * Validate and encode an ID used as a REST path segment.
+ * inputSchema declares these as `number`, but the value arrives from the MCP
+ * client unchecked at runtime — a string containing "/" or ".." could rewrite
+ * the request path within the (operator-fixed) API host. Enforce an integer
+ * and encode it so it can only ever be a single, literal path segment.
+ */
+function pathId(value: unknown): string {
+  const n = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+  if (typeof n !== "number" || !Number.isInteger(n)) {
+    throw new Error(`Invalid path parameter: expected an integer ID, got ${JSON.stringify(value)}`);
+  }
+  return encodeURIComponent(String(n));
 }
 
 // ============================================================================
@@ -1059,18 +1078,18 @@ async function handleToolCall(
       });
 
     case "plenty_get_contact":
-      return apiRequest("GET", `/rest/accounts/contacts/${args.contactId}`);
+      return apiRequest("GET", `/rest/accounts/contacts/${pathId(args.contactId)}`);
 
     case "plenty_get_contact_addresses":
       return apiRequest(
         "GET",
-        `/rest/accounts/contacts/${args.contactId}/addresses`
+        `/rest/accounts/contacts/${pathId(args.contactId)}/addresses`
       );
 
     case "plenty_get_contact_orders":
       return apiRequest(
         "GET",
-        `/rest/orders/contacts/${args.contactId}`,
+        `/rest/orders/contacts/${pathId(args.contactId)}`,
         undefined,
         {
           page: args.page as number,
@@ -1089,12 +1108,12 @@ async function handleToolCall(
       });
 
     case "plenty_get_item":
-      return apiRequest("GET", `/rest/items/${args.itemId}`);
+      return apiRequest("GET", `/rest/items/${pathId(args.itemId)}`);
 
     case "plenty_list_variations":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations`,
+        `/rest/items/${pathId(args.itemId)}/variations`,
         undefined,
         {
           page: args.page as number,
@@ -1104,7 +1123,7 @@ async function handleToolCall(
       );
 
     case "plenty_get_variation":
-      return apiRequest("GET", `/rest/items/${args.itemId}/variations/${args.variationId}`);
+      return apiRequest("GET", `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}`);
 
     case "plenty_list_barcodes":
       return apiRequest("GET", "/rest/items/barcodes");
@@ -1112,7 +1131,7 @@ async function handleToolCall(
     case "plenty_list_variation_barcodes":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_barcodes`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/variation_barcodes`
       );
 
     // --- Orders ---
@@ -1130,21 +1149,21 @@ async function handleToolCall(
       });
 
     case "plenty_get_order":
-      return apiRequest("GET", `/rest/orders/${args.orderId}`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}`);
 
     case "plenty_get_order_items":
-      return apiRequest("GET", `/rest/orders/${args.orderId}/items`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}/items`);
 
     case "plenty_get_order_addresses":
-      return apiRequest("GET", `/rest/orders/${args.orderId}/addresses/${args.relationTypeId}`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}/addresses/${pathId(args.relationTypeId)}`);
 
     case "plenty_get_order_documents":
-      return apiRequest("GET", `/rest/orders/${args.orderId}/documents`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}/documents`);
 
     case "plenty_get_order_shipping":
       return apiRequest(
         "GET",
-        `/rest/orders/${args.orderId}/shipping/packages`
+        `/rest/orders/${pathId(args.orderId)}/shipping/packages`
       );
 
     // --- Stock ---
@@ -1159,7 +1178,7 @@ async function handleToolCall(
     case "plenty_get_warehouse_stock":
       return apiRequest(
         "GET",
-        `/rest/stockmanagement/warehouses/${args.warehouseId}/stock`,
+        `/rest/stockmanagement/warehouses/${pathId(args.warehouseId)}/stock`,
         undefined,
         {
           page: args.page as number,
@@ -1173,7 +1192,7 @@ async function handleToolCall(
     case "plenty_get_warehouse":
       return apiRequest(
         "GET",
-        `/rest/stockmanagement/warehouses/${args.warehouseId}`
+        `/rest/stockmanagement/warehouses/${pathId(args.warehouseId)}`
       );
 
     // --- Categories ---
@@ -1187,12 +1206,12 @@ async function handleToolCall(
       });
 
     case "plenty_get_category":
-      return apiRequest("GET", `/rest/categories/${args.categoryId}`, undefined, {
+      return apiRequest("GET", `/rest/categories/${pathId(args.categoryId)}`, undefined, {
         lang: args.lang as string,
       });
 
     case "plenty_get_category_branch":
-      return apiRequest("GET", `/rest/category_branches/${args.categoryId}`);
+      return apiRequest("GET", `/rest/category_branches/${pathId(args.categoryId)}`);
 
     // --- Payments ---
     case "plenty_list_payments":
@@ -1204,7 +1223,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_payment":
-      return apiRequest("GET", `/rest/payments/${args.paymentId}`);
+      return apiRequest("GET", `/rest/payments/${pathId(args.paymentId)}`);
 
     case "plenty_list_payment_methods":
       return apiRequest("GET", "/rest/payments/methods", undefined, {
@@ -1212,7 +1231,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_payment_properties":
-      return apiRequest("GET", `/rest/payments/${args.paymentId}/properties`);
+      return apiRequest("GET", `/rest/payments/${pathId(args.paymentId)}/properties`);
 
     // --- Attributes ---
     case "plenty_list_attributes":
@@ -1222,24 +1241,24 @@ async function handleToolCall(
       });
 
     case "plenty_get_attribute":
-      return apiRequest("GET", `/rest/items/attributes/${args.attributeId}`);
+      return apiRequest("GET", `/rest/items/attributes/${pathId(args.attributeId)}`);
 
     case "plenty_list_attribute_values":
       return apiRequest(
         "GET",
-        `/rest/items/attributes/${args.attributeId}/values`
+        `/rest/items/attributes/${pathId(args.attributeId)}/values`
       );
 
     case "plenty_get_attribute_names":
       return apiRequest(
         "GET",
-        `/rest/items/attributes/${args.attributeId}/names`
+        `/rest/items/attributes/${pathId(args.attributeId)}/names`
       );
 
     case "plenty_get_attribute_value_names":
       return apiRequest(
         "GET",
-        `/rest/items/attribute_values/${args.valueId}/names`
+        `/rest/items/attribute_values/${pathId(args.valueId)}/names`
       );
 
     // --- Sales Prices ---
@@ -1252,7 +1271,7 @@ async function handleToolCall(
     case "plenty_get_sales_price":
       return apiRequest(
         "GET",
-        `/rest/items/sales_prices/${args.salesPriceId}`
+        `/rest/items/sales_prices/${pathId(args.salesPriceId)}`
       );
 
     // --- Properties ---
@@ -1263,7 +1282,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_property":
-      return apiRequest("GET", `/rest/items/properties/${args.propertyId}`);
+      return apiRequest("GET", `/rest/items/properties/${pathId(args.propertyId)}`);
 
     case "plenty_list_property_groups":
       return apiRequest("GET", "/rest/items/property_groups", undefined, {
@@ -1279,7 +1298,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_tag":
-      return apiRequest("GET", `/rest/tags/${args.tagId}`);
+      return apiRequest("GET", `/rest/tags/${pathId(args.tagId)}`);
 
     // --- VAT ---
     case "plenty_list_vat_configurations":
@@ -1296,7 +1315,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_account":
-      return apiRequest("GET", `/rest/accounts/${args.accountId}`);
+      return apiRequest("GET", `/rest/accounts/${pathId(args.accountId)}`);
 
     case "plenty_list_contact_classes":
       return apiRequest("GET", "/rest/accounts/contacts/classes");
@@ -1324,7 +1343,7 @@ async function handleToolCall(
 
     // --- Item Images ---
     case "plenty_list_item_images":
-      return apiRequest("GET", `/rest/items/${args.itemId}/images`);
+      return apiRequest("GET", `/rest/items/${pathId(args.itemId)}/images`);
 
     // ========================================================================
     // NEW TOOL HANDLERS - Added based on OpenAPI v2 specification
@@ -1348,44 +1367,44 @@ async function handleToolCall(
     case "plenty_get_variation_stock":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/stock`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/stock`
       );
 
     case "plenty_list_variation_sales_prices":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_sales_prices`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/variation_sales_prices`
       );
 
     case "plenty_list_variation_categories":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_categories`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/variation_categories`
       );
 
     case "plenty_list_variation_suppliers":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_suppliers`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/variation_suppliers`
       );
 
     case "plenty_list_variation_warehouses":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_warehouses`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/variation_warehouses`
       );
 
     case "plenty_get_variation_descriptions":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/descriptions`
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/descriptions`
       );
 
     // --- Stock Movements ---
     case "plenty_list_variation_stock_movements":
       return apiRequest(
         "GET",
-        `/rest/items/${args.itemId}/variations/${args.variationId}/stock/movements`,
+        `/rest/items/${pathId(args.itemId)}/variations/${pathId(args.variationId)}/stock/movements`,
         undefined,
         {
           page: args.page as number,
@@ -1396,7 +1415,7 @@ async function handleToolCall(
     case "plenty_list_warehouse_stock_movements":
       return apiRequest(
         "GET",
-        `/rest/stockmanagement/warehouses/${args.warehouseId}/stock/movements`,
+        `/rest/stockmanagement/warehouses/${pathId(args.warehouseId)}/stock/movements`,
         undefined,
         {
           page: args.page as number,
@@ -1406,10 +1425,10 @@ async function handleToolCall(
 
     // --- Orders Extended ---
     case "plenty_get_order_dates":
-      return apiRequest("GET", `/rest/orders/${args.orderId}/dates`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}/dates`);
 
     case "plenty_get_order_status_history":
-      return apiRequest("GET", `/rest/orders/${args.orderId}/status-history`);
+      return apiRequest("GET", `/rest/orders/${pathId(args.orderId)}/status-history`);
 
     case "plenty_list_shipping_countries":
       return apiRequest("GET", "/rest/orders/shipping/countries");
@@ -1418,19 +1437,19 @@ async function handleToolCall(
     case "plenty_get_contact_banks":
       return apiRequest(
         "GET",
-        `/rest/accounts/contacts/${args.contactId}/banks`
+        `/rest/accounts/contacts/${pathId(args.contactId)}/banks`
       );
 
     case "plenty_get_contact_related_data":
       return apiRequest(
         "GET",
-        `/rest/accounts/contacts/${args.contactId}/related_data`
+        `/rest/accounts/contacts/${pathId(args.contactId)}/related_data`
       );
 
     case "plenty_get_contact_order_summary":
       return apiRequest(
         "GET",
-        `/rest/accounts/order_summaries/contacts/${args.contactId}`
+        `/rest/accounts/order_summaries/contacts/${pathId(args.contactId)}`
       );
 
     // --- Manufacturers ---
@@ -1443,7 +1462,7 @@ async function handleToolCall(
     case "plenty_get_manufacturer":
       return apiRequest(
         "GET",
-        `/rest/items/manufacturers/${args.manufacturerId}`
+        `/rest/items/manufacturers/${pathId(args.manufacturerId)}`
       );
 
     // --- Units ---
@@ -1454,7 +1473,7 @@ async function handleToolCall(
       });
 
     case "plenty_get_unit":
-      return apiRequest("GET", `/rest/items/units/${args.unitId}`);
+      return apiRequest("GET", `/rest/items/units/${pathId(args.unitId)}`);
 
     // --- Shipping Profiles ---
     case "plenty_list_shipping_presets":
@@ -1542,7 +1561,61 @@ async function main() {
 
   if (mode === "http") {
     const port = parseInt(process.env.MCP_PORT ?? "3102", 10);
-    const host = process.env.MCP_HOST ?? "0.0.0.0";
+    // Default to loopback only. Binding to all interfaces (0.0.0.0) must be an
+    // explicit opt-in, because every tool runs with the operator's plentyONE
+    // credentials and reaching the port means reaching those tools.
+    const host = process.env.MCP_HOST ?? "127.0.0.1";
+
+    // Optional bearer-token / API-key gate for the /mcp endpoint. When
+    // MCP_AUTH_TOKEN is set, every /mcp request must present it as either
+    // `Authorization: Bearer <token>` or `X-API-Key: <token>`. Left unset,
+    // the server refuses to bind to a non-loopback host unless MCP_ALLOW_NO_AUTH
+    // is explicitly set — fail closed rather than silently expose all tools.
+    const authToken = process.env.MCP_AUTH_TOKEN;
+    const isLoopbackHost = host === "127.0.0.1" || host === "::1" || host === "localhost";
+    if (!authToken && !isLoopbackHost && process.env.MCP_ALLOW_NO_AUTH !== "true") {
+      console.error(
+        `Refusing to start HTTP transport on ${host} without authentication. ` +
+          `Set MCP_AUTH_TOKEN to require a bearer/API-key token, bind to 127.0.0.1, ` +
+          `or set MCP_ALLOW_NO_AUTH=true to acknowledge an unauthenticated listener.`
+      );
+      process.exit(1);
+    }
+
+    // Timing-safe comparison of a presented credential against the configured token.
+    const tokenMatches = (presented: string | undefined): boolean => {
+      if (!authToken || !presented) return false;
+      const a = Buffer.from(presented);
+      const b = Buffer.from(authToken);
+      return a.length === b.length && timingSafeEqual(a, b);
+    };
+
+    const isAuthorized = (req: IncomingMessage): boolean => {
+      if (!authToken) return true; // no token configured → gate disabled (loopback / opt-in only)
+      const authHeader = req.headers["authorization"];
+      if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+        if (tokenMatches(authHeader.slice("Bearer ".length).trim())) return true;
+      }
+      const apiKey = req.headers["x-api-key"];
+      if (typeof apiKey === "string" && tokenMatches(apiKey.trim())) return true;
+      return false;
+    };
+
+    // Host/Origin allow-lists for DNS-rebinding protection. Loopback on the
+    // listening port is always permitted; additional entries come from env.
+    const splitEnv = (v: string | undefined): string[] =>
+      (v ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const allowedHosts = [
+      `127.0.0.1:${port}`,
+      `localhost:${port}`,
+      `[::1]:${port}`,
+      ...splitEnv(process.env.MCP_ALLOWED_HOSTS),
+    ];
+    const allowedOrigins = [
+      `http://127.0.0.1:${port}`,
+      `http://localhost:${port}`,
+      ...splitEnv(process.env.MCP_ALLOWED_ORIGINS),
+    ];
 
     const transports = new Map<string, StreamableHTTPServerTransport>();
 
@@ -1557,6 +1630,16 @@ async function main() {
 
       if (url.pathname !== "/mcp") {
         res.writeHead(404).end("Not Found");
+        return;
+      }
+
+      // Require authentication for all /mcp traffic when a token is configured.
+      if (!isAuthorized(req)) {
+        res.writeHead(401, {
+          "Content-Type": "application/json",
+          "WWW-Authenticate": 'Bearer realm="mcp"',
+        });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
         return;
       }
 
@@ -1577,6 +1660,12 @@ async function main() {
       // New session
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
+        // Defend against DNS-rebinding: only honour requests whose Host/Origin
+        // match an allow-list. Defaults cover loopback on the configured port;
+        // extend via MCP_ALLOWED_HOSTS / MCP_ALLOWED_ORIGINS (comma-separated).
+        enableDnsRebindingProtection: true,
+        allowedHosts,
+        allowedOrigins,
       });
 
       transport.onclose = () => {
@@ -1596,7 +1685,10 @@ async function main() {
     });
 
     httpServer.listen(port, host, () => {
-      console.error(`plentyONE MCP Server v${SERVER_VERSION} running on http://${host}:${port}/mcp`);
+      const authState = authToken ? "token auth enabled" : "no auth (loopback/opt-in)";
+      console.error(
+        `plentyONE MCP Server v${SERVER_VERSION} running on http://${host}:${port}/mcp (${authState})`
+      );
     });
   } else {
     const server = createMcpServer();

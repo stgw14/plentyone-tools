@@ -50,6 +50,7 @@ const PII_SUBTREE_KEYS: RegExp[] = [
   /^(shippingAddress|billingAddress|defaultAddress|buyerInfo)$/i,
   /^(deliveryAddress|invoiceAddress|senderAddress)$/i,
   /^addresses$/i,  // plentyONE contact/order addresses array
+  /^banks$/i,      // plentyONE contact banks array (IBAN/BIC/account holder)
 ];
 
 // Fields that are safe to keep even inside PII subtrees
