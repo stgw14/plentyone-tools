@@ -1,378 +1,454 @@
-/**
- * Handlers Index - Aggregates all handlers and provides the main handleToolCall function
- */
-
-import { ApiResponse } from "../types.js";
-import { filterPII } from "../utils/pii-filter.js";
-
-// Auth handlers
 import {
-  handleLogin,
-  handleLogout,
-  handleRefreshToken,
-  handleGetAuthorizedUser,
-} from "./auth.js";
+  login,
+  refreshAccessToken,
+  resetToken,
+  apiRequest,
+} from "../core/client.js";
 
-// Contacts handlers
-import {
-  handleListContacts,
-  handleGetContact,
-  handleGetContactAddresses,
-  handleCreateContactAddress,
-  handleGetContactOrders,
-} from "./contacts.js";
-
-// Items handlers
-import {
-  handleSearchItems,
-  handleGetItem,
-  handleListVariations,
-  handleGetVariation,
-  handleListBarcodes,
-} from "./items.js";
-
-// Orders handlers
-import {
-  handleSearchOrders,
-  handleGetOrder,
-  handleGetOrderItems,
-  handleGetOrderAddresses,
-  handleGetOrderDocuments,
-  handleGetOrderShipping,
-} from "./orders.js";
-
-// Stock handlers
-import {
-  handleListStock,
-  handleGetWarehouseStock,
-  handleListWarehouses,
-  handleGetWarehouse,
-  handleListWarehouseLocations,
-  handleGetStockMovements,
-} from "./stock.js";
-
-// Categories handlers
-import {
-  handleListCategories,
-  handleGetCategory,
-  handleGetCategoryBranch,
-} from "./categories.js";
-
-// Payments handlers
-import {
-  handleListPayments,
-  handleGetPayment,
-  handleListPaymentMethods,
-  handleGetPaymentProperties,
-} from "./payments.js";
-
-// Attributes handlers
-import {
-  handleListAttributes,
-  handleGetAttribute,
-  handleListAttributeValues,
-  handleGetAttributeNames,
-  handleGetAttributeValueNames,
-} from "./attributes.js";
-
-// Sales Prices handlers
-import {
-  handleListSalesPrices,
-  handleGetSalesPrice,
-} from "./salesPrices.js";
-
-// Properties handlers
-import {
-  handleListProperties,
-  handleGetProperty,
-  handleListPropertyGroups,
-} from "./properties.js";
-
-// Tags handlers
-import { handleListTags, handleGetTag } from "./tags.js";
-
-// VAT handlers
-import { handleListVatConfigurations } from "./vat.js";
-
-// Shipping handlers
-import { handleListShippingProfiles } from "./shipping.js";
-
-// Accounts handlers
-import {
-  handleListAccounts,
-  handleGetAccount,
-  handleListContactClasses,
-  handleListContactTypes,
-} from "./accounts.js";
-
-// Order Meta handlers
-import {
-  handleListOrderStatuses,
-  handleListOrderReferrers,
-} from "./orderMeta.js";
-
-// Countries handlers
-import { handleListCountries } from "./countries.js";
-
-// Item Images handlers
-import { handleListItemImages } from "./itemImages.js";
-
-/**
- * Main tool call dispatcher
- */
 export async function handleToolCall(
   name: string,
   args: Record<string, unknown>
-): Promise<string> {
-  let result: ApiResponse;
-
+): Promise<unknown> {
   switch (name) {
     // --- Authentication ---
     case "plenty_login":
-      result = await handleLogin(args);
-      break;
+      await login();
+      return { success: true, message: "Login successful" };
 
     case "plenty_logout":
-      result = await handleLogout();
-      break;
+      resetToken();
+      return { success: true, message: "Logout successful" };
 
     case "plenty_refresh_token":
-      result = await handleRefreshToken();
-      break;
+      await refreshAccessToken();
+      return { success: true, message: "Token refreshed" };
 
     case "plenty_get_authorized_user":
-      result = await handleGetAuthorizedUser();
-      break;
+      return apiRequest("GET", "/rest/authorized_user");
 
     // --- Contacts ---
     case "plenty_list_contacts":
-      result = await handleListContacts(args);
-      break;
+      return apiRequest("GET", "/rest/accounts/contacts", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        name: args.name as string,
+        email: args.email as string,
+        contactType: args.contactType as number,
+        countryId: args.countryId as number,
+      });
 
     case "plenty_get_contact":
-      result = await handleGetContact(args);
-      break;
+      return apiRequest("GET", `/rest/accounts/contacts/${args.contactId}`);
 
     case "plenty_get_contact_addresses":
-      result = await handleGetContactAddresses(args);
-      break;
-
-    case "plenty_create_contact_address":
-      result = await handleCreateContactAddress(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/accounts/contacts/${args.contactId}/addresses`
+      );
 
     case "plenty_get_contact_orders":
-      result = await handleGetContactOrders(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/orders/contacts/${args.contactId}`,
+        undefined,
+        {
+          page: args.page as number,
+          itemsPerPage: args.itemsPerPage as number,
+        }
+      );
 
     // --- Items ---
     case "plenty_search_items":
-      result = await handleSearchItems(args);
-      break;
+      return apiRequest("GET", "/rest/items", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        name: args.name as string,
+        flagOne: args.flagOne as number,
+        flagTwo: args.flagTwo as number,
+      });
 
     case "plenty_get_item":
-      result = await handleGetItem(args);
-      break;
+      return apiRequest("GET", `/rest/items/${args.itemId}`);
 
     case "plenty_list_variations":
-      result = await handleListVariations(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations`,
+        undefined,
+        {
+          page: args.page as number,
+          itemsPerPage: args.itemsPerPage as number,
+          isActive: args.isActive as boolean,
+        }
+      );
 
     case "plenty_get_variation":
-      result = await handleGetVariation(args);
-      break;
+      return apiRequest("GET", `/rest/items/${args.itemId}/variations/${args.variationId}`);
 
     case "plenty_list_barcodes":
-      result = await handleListBarcodes();
-      break;
+      return apiRequest("GET", "/rest/items/barcodes");
+
+    case "plenty_list_variation_barcodes":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_barcodes`
+      );
 
     // --- Orders ---
     case "plenty_search_orders":
-      result = await handleSearchOrders(args);
-      break;
+      return apiRequest("GET", "/rest/orders", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        statusFrom: args.statusFrom as number,
+        statusTo: args.statusTo as number,
+        orderType: args.orderType as string,
+        contactId: args.contactId as number,
+        referrerId: args.referrerId as number,
+        createdAtFrom: args.createdAtFrom as string,
+        createdAtTo: args.createdAtTo as string,
+      });
 
     case "plenty_get_order":
-      result = await handleGetOrder(args);
-      break;
+      return apiRequest("GET", `/rest/orders/${args.orderId}`);
 
     case "plenty_get_order_items":
-      result = await handleGetOrderItems(args);
-      break;
+      return apiRequest("GET", `/rest/orders/${args.orderId}/items`);
 
     case "plenty_get_order_addresses":
-      result = await handleGetOrderAddresses(args);
-      break;
+      return apiRequest("GET", `/rest/orders/${args.orderId}/addresses/${args.relationTypeId}`);
 
     case "plenty_get_order_documents":
-      result = await handleGetOrderDocuments(args);
-      break;
+      return apiRequest("GET", `/rest/orders/${args.orderId}/documents`);
 
     case "plenty_get_order_shipping":
-      result = await handleGetOrderShipping(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/orders/${args.orderId}/shipping/packages`
+      );
 
     // --- Stock ---
     case "plenty_list_stock":
-      result = await handleListStock(args);
-      break;
+      return apiRequest("GET", "/rest/stockmanagement/stock", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        variationId: args.variationId as number,
+        warehouseId: args.warehouseId as number,
+      });
 
     case "plenty_get_warehouse_stock":
-      result = await handleGetWarehouseStock(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/stockmanagement/warehouses/${args.warehouseId}/stock`,
+        undefined,
+        {
+          page: args.page as number,
+          itemsPerPage: args.itemsPerPage as number,
+        }
+      );
 
     case "plenty_list_warehouses":
-      result = await handleListWarehouses();
-      break;
+      return apiRequest("GET", "/rest/stockmanagement/warehouses");
 
     case "plenty_get_warehouse":
-      result = await handleGetWarehouse(args);
-      break;
-
-    case "plenty_list_warehouse_locations":
-      result = await handleListWarehouseLocations(args);
-      break;
-
-    case "plenty_get_stock_movements":
-      result = await handleGetStockMovements(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/stockmanagement/warehouses/${args.warehouseId}`
+      );
 
     // --- Categories ---
     case "plenty_list_categories":
-      result = await handleListCategories(args);
-      break;
+      return apiRequest("GET", "/rest/categories", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        parentId: args.parentId as number,
+        type: args.type as string,
+        lang: args.lang as string,
+      });
 
     case "plenty_get_category":
-      result = await handleGetCategory(args);
-      break;
+      return apiRequest("GET", `/rest/categories/${args.categoryId}`, undefined, {
+        lang: args.lang as string,
+      });
 
     case "plenty_get_category_branch":
-      result = await handleGetCategoryBranch(args);
-      break;
+      return apiRequest("GET", `/rest/category_branches/${args.categoryId}`);
 
     // --- Payments ---
     case "plenty_list_payments":
-      result = await handleListPayments(args);
-      break;
+      return apiRequest("GET", "/rest/payments", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        orderId: args.orderId as number,
+        paymentMethodId: args.paymentMethodId as number,
+      });
 
     case "plenty_get_payment":
-      result = await handleGetPayment(args);
-      break;
+      return apiRequest("GET", `/rest/payments/${args.paymentId}`);
 
     case "plenty_list_payment_methods":
-      result = await handleListPaymentMethods();
-      break;
+      return apiRequest("GET", "/rest/payments/methods", undefined, {
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_payment_properties":
-      result = await handleGetPaymentProperties(args);
-      break;
+      return apiRequest("GET", `/rest/payments/${args.paymentId}/properties`);
 
     // --- Attributes ---
     case "plenty_list_attributes":
-      result = await handleListAttributes(args);
-      break;
+      return apiRequest("GET", "/rest/items/attributes", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_attribute":
-      result = await handleGetAttribute(args);
-      break;
+      return apiRequest("GET", `/rest/items/attributes/${args.attributeId}`);
 
     case "plenty_list_attribute_values":
-      result = await handleListAttributeValues(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/items/attributes/${args.attributeId}/values`
+      );
 
     case "plenty_get_attribute_names":
-      result = await handleGetAttributeNames(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/items/attributes/${args.attributeId}/names`
+      );
 
     case "plenty_get_attribute_value_names":
-      result = await handleGetAttributeValueNames(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/items/attribute_values/${args.valueId}/names`
+      );
 
     // --- Sales Prices ---
     case "plenty_list_sales_prices":
-      result = await handleListSalesPrices(args);
-      break;
+      return apiRequest("GET", "/rest/items/sales_prices", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_sales_price":
-      result = await handleGetSalesPrice(args);
-      break;
+      return apiRequest(
+        "GET",
+        `/rest/items/sales_prices/${args.salesPriceId}`
+      );
 
     // --- Properties ---
     case "plenty_list_properties":
-      result = await handleListProperties(args);
-      break;
+      return apiRequest("GET", "/rest/items/properties", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_property":
-      result = await handleGetProperty(args);
-      break;
+      return apiRequest("GET", `/rest/items/properties/${args.propertyId}`);
 
     case "plenty_list_property_groups":
-      result = await handleListPropertyGroups(args);
-      break;
+      return apiRequest("GET", "/rest/items/property_groups", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     // --- Tags ---
     case "plenty_list_tags":
-      result = await handleListTags(args);
-      break;
+      return apiRequest("GET", "/rest/tags", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_tag":
-      result = await handleGetTag(args);
-      break;
+      return apiRequest("GET", `/rest/tags/${args.tagId}`);
 
     // --- VAT ---
     case "plenty_list_vat_configurations":
-      result = await handleListVatConfigurations(args);
-      break;
-
-    // --- Shipping ---
-    case "plenty_list_shipping_profiles":
-      result = await handleListShippingProfiles(args);
-      break;
+      return apiRequest("GET", "/rest/vat", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     // --- Accounts ---
     case "plenty_list_accounts":
-      result = await handleListAccounts(args);
-      break;
+      return apiRequest("GET", "/rest/accounts", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_get_account":
-      result = await handleGetAccount(args);
-      break;
+      return apiRequest("GET", `/rest/accounts/${args.accountId}`);
 
     case "plenty_list_contact_classes":
-      result = await handleListContactClasses();
-      break;
+      return apiRequest("GET", "/rest/accounts/contacts/classes");
 
     case "plenty_list_contact_types":
-      result = await handleListContactTypes();
-      break;
+      return apiRequest("GET", "/rest/accounts/contacts/types");
 
     // --- Order Meta ---
     case "plenty_list_order_statuses":
-      result = await handleListOrderStatuses(args);
-      break;
+      return apiRequest("GET", "/rest/orders/statuses", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     case "plenty_list_order_referrers":
-      result = await handleListOrderReferrers();
-      break;
+      return apiRequest("GET", "/rest/orders/referrers");
 
     // --- Countries ---
     case "plenty_list_countries":
-      result = await handleListCountries(args);
-      break;
+      return apiRequest("GET", "/rest/orders/shipping/countries", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        active: args.active as boolean,
+      });
 
     // --- Item Images ---
     case "plenty_list_item_images":
-      result = await handleListItemImages(args);
-      break;
+      return apiRequest("GET", `/rest/items/${args.itemId}/images`);
+
+    // ========================================================================
+    // NEW TOOL HANDLERS - Added based on OpenAPI v2 specification
+    // ========================================================================
+
+    // --- Variations Extended ---
+    case "plenty_search_variations":
+      return apiRequest("GET", "/rest/items/variations", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+        id: args.id as number,
+        itemId: args.itemId as number,
+        isMain: args.isMain as boolean,
+        isActive: args.isActive as boolean,
+        barcode: args.barcode as string,
+        numberExact: args.numberExact as string,
+        sku: args.sku as string,
+        supplierId: args.supplierId as number,
+      });
+
+    case "plenty_get_variation_stock":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/stock`
+      );
+
+    case "plenty_list_variation_sales_prices":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_sales_prices`
+      );
+
+    case "plenty_list_variation_categories":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_categories`
+      );
+
+    case "plenty_list_variation_suppliers":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_suppliers`
+      );
+
+    case "plenty_list_variation_warehouses":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/variation_warehouses`
+      );
+
+    case "plenty_get_variation_descriptions":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/descriptions`
+      );
+
+    // --- Stock Movements ---
+    case "plenty_list_variation_stock_movements":
+      return apiRequest(
+        "GET",
+        `/rest/items/${args.itemId}/variations/${args.variationId}/stock/movements`,
+        undefined,
+        {
+          page: args.page as number,
+          itemsPerPage: args.itemsPerPage as number,
+        }
+      );
+
+    case "plenty_list_warehouse_stock_movements":
+      return apiRequest(
+        "GET",
+        `/rest/stockmanagement/warehouses/${args.warehouseId}/stock/movements`,
+        undefined,
+        {
+          page: args.page as number,
+          itemsPerPage: args.itemsPerPage as number,
+        }
+      );
+
+    // --- Orders Extended ---
+    case "plenty_get_order_dates":
+      return apiRequest("GET", `/rest/orders/${args.orderId}/dates`);
+
+    case "plenty_get_order_status_history":
+      return apiRequest("GET", `/rest/orders/${args.orderId}/status-history`);
+
+    case "plenty_list_shipping_countries":
+      return apiRequest("GET", "/rest/orders/shipping/countries");
+
+    // --- Contacts Extended ---
+    case "plenty_get_contact_banks":
+      return apiRequest(
+        "GET",
+        `/rest/accounts/contacts/${args.contactId}/banks`
+      );
+
+    case "plenty_get_contact_related_data":
+      return apiRequest(
+        "GET",
+        `/rest/accounts/contacts/${args.contactId}/related_data`
+      );
+
+    case "plenty_get_contact_order_summary":
+      return apiRequest(
+        "GET",
+        `/rest/accounts/order_summaries/contacts/${args.contactId}`
+      );
+
+    // --- Manufacturers ---
+    case "plenty_list_manufacturers":
+      return apiRequest("GET", "/rest/items/manufacturers", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
+
+    case "plenty_get_manufacturer":
+      return apiRequest(
+        "GET",
+        `/rest/items/manufacturers/${args.manufacturerId}`
+      );
+
+    // --- Units ---
+    case "plenty_list_units":
+      return apiRequest("GET", "/rest/items/units", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
+
+    case "plenty_get_unit":
+      return apiRequest("GET", `/rest/items/units/${args.unitId}`);
+
+    // --- Shipping Profiles ---
+    case "plenty_list_shipping_presets":
+      return apiRequest("GET", "/rest/orders/shipping/presets", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
+
+    case "plenty_list_item_shipping_profiles":
+      return apiRequest("GET", "/rest/items/item_shipping_profiles", undefined, {
+        page: args.page as number,
+        itemsPerPage: args.itemsPerPage as number,
+      });
 
     default:
-      result = {
-        success: false,
-        error: {
-          code: "UNKNOWN_TOOL",
-          message: `Unknown tool: ${name}`,
-        },
-      };
+      throw new Error(`Unknown tool: ${name}`);
   }
-
-  return JSON.stringify(filterPII(result), null, 2);
 }
